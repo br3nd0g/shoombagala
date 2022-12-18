@@ -1,6 +1,6 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { rollMonster, getMonsterList } = require('/monsterdata.js')
+const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder, ActivityType  } = require('discord.js');
+const { rollMonster, getMonsterList } = require('./monsterdata')
 
 const client = new Client({ intents: [
     GatewayIntentBits.DirectMessages,
@@ -32,7 +32,12 @@ const monsterList = getMonsterList() //get all monsters on run and add to list
 //DISCORD CLIENT STUFF
 
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`Logged in as ${client.user.tag}!`);
+
+    client.user.setPresence({
+        activities: [{ name: `My Singing Monsters`, type: ActivityType.Playing }],
+        status: 'online'
+    });
 });
 
 client.on('messageCreate', message => {
