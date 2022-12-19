@@ -26,8 +26,7 @@ function makeHelpString(){
 
 const helpString = makeHelpString()
 
-const monsterList = getMonsterList() //get all monsters on run and add to list
-
+var monsterList;
 
 //DISCORD CLIENT STUFF
 
@@ -40,7 +39,7 @@ client.on('ready', () => {
     });
 });
 
-client.on('messageCreate', message => {
+client.on('messageCreate', async (message) => {
 
     if(message.content.startsWith(commandPrefix)){
 
@@ -52,17 +51,22 @@ client.on('messageCreate', message => {
 
         if(msgCon.startsWith("monster")){
 
-            const image  = new AttachmentBuilder('maw.png');
+            const monsterDetails = await rollMonster(monsterList);
+
+            const name = monsterDetails.chosMonster;
+            var rarity = monsterDetails.rar;
+            const imageURL = monsterDetails.photoUrl;
+
 
             const monsterembed = new EmbedBuilder()
-            .setTitle("Maw")
+            .setTitle(name)
             .setColor(0x1c6b24)
             .addFields(
-                { name: 'Common', value: 'React to this message to claim!' }
+                { name: rarity, value: 'React to this message to claim!' }
             )
-            .setImage('attachment://maw.png')
+            .setImage(imageURL)
 
-            message.channel.send({ embeds: [monsterembed], files: [image] });
+            message.channel.send({ embeds: [monsterembed]});
         }
         
         if(msgCon.startsWith("evil")){
@@ -84,5 +88,11 @@ client.on('messageCreate', message => {
     }
 });
 
+async function startBot(){
+    monsterList = await getMonsterList()
+    setTimeout(() => {
+        //console.log(monsterList);
+        client.login(process.env.clToken); }, 2000)
+}
 
-client.login(process.env.clToken); 
+startBot()
