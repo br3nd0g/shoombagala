@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Client, Events, GatewayIntentBits, EmbedBuilder, AttachmentBuilder, ActivityType } = require('discord.js');
+const { send } = require('process');
 const { rollMonster, getMonsterList } = require('./monsterdata')
+const { checkIfClaimed, addClaim, getUserClaims } = require('./userdata')
 
 const client = new Client({ intents: [
     GatewayIntentBits.DirectMessages,
@@ -33,6 +35,44 @@ var monsterList;
 
 //DISCORD CLIENT STUFF
 
+async function sendMonster(message){
+
+    const monsterDetails = await rollMonster(monsterList);
+
+    const name = monsterDetails.chosMonster;
+    var rarity = monsterDetails.rar;
+    const imageURL = monsterDetails.photoUrl;
+    var possibleUserID;
+
+    //check here if monster has been rolled in guild, and if so, put claimed on footer and who by- also prevent being able to claim it with reaction.(and remove react to claim message! (put the stuff in the .then() as an if))
+    const claimCheck = checkIfClaimed(name, rarity, message.guildId)
+
+    const monsterembed = new EmbedBuilder()
+    .setTitle(name)
+    .setColor(0x1c6b24)
+    .addFields(
+        { name: rarity, value: 'React to this message to claim!' }
+    )
+    .setImage(imageURL)
+
+    if(claimCheck.claimed == true){
+        //var userWhoClaimed = client.users.cache.get(claimCheck.userid);
+
+        //console.log(user.username)
+        //monsterembed = EmbedBuilder.from(monsterembed).setFooter({ text: `Claimed by ${user.tag}`, iconURL: user.displayAvatarURL() });
+    }
+
+    message.channel.send({ embeds: [monsterembed]}).then((msg) =>{
+
+        const collector = msg.createReactionCollector({ time: 30000 });
+
+        collector.on('collect', (reaction, user) => {
+            const editedEmbed = EmbedBuilder.from(monsterembed).setFooter({ text: `Claimed by ${user.tag}`, iconURL: user.displayAvatarURL() });
+            msg.edit({ embeds: [editedEmbed] });
+        });
+    });
+}
+
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
@@ -54,32 +94,8 @@ client.on('messageCreate', async (message) => {
 
         if(msgCon.startsWith("monster")){
 
-            const monsterDetails = await rollMonster(monsterList);
-
-            const name = monsterDetails.chosMonster;
-            var rarity = monsterDetails.rar;
-            const imageURL = monsterDetails.photoUrl;
-
-            //check here if monster has been rolled in guild, and if so, put claimed on footer and who by- also prevent being able to claim it with reaction.(and remove react to claim message! (put the stuff in the .then() as an if))
-
-
-            const monsterembed = new EmbedBuilder()
-            .setTitle(name)
-            .setColor(0x1c6b24)
-            .addFields(
-                { name: rarity, value: 'React to this message to claim!' }
-            )
-            .setImage(imageURL)
-
-            message.channel.send({ embeds: [monsterembed]}).then((msg) =>{
-
-                const collector = msg.createReactionCollector({ time: 30000 });
-
-                collector.on('collect', (reaction, user) => {
-                    const editedEmbed = EmbedBuilder.from(monsterembed).setFooter({ text: `Claimed by ${user.tag}`, iconURL: user.displayAvatarURL() });
-                    msg.edit({ embeds: [editedEmbed] });
-                });
-            });
+            sendMonster(message)
+            
         }
         
         if(msgCon.startsWith("evil")){
