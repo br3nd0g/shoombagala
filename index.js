@@ -29,6 +29,8 @@ const helpString = makeHelpString()
 
 var monsterList;
 
+//make funcion for sending monster message rather than having it in listener
+
 //DISCORD CLIENT STUFF
 
 client.on('ready', () => {
@@ -57,6 +59,8 @@ client.on('messageCreate', async (message) => {
             const name = monsterDetails.chosMonster;
             var rarity = monsterDetails.rar;
             const imageURL = monsterDetails.photoUrl;
+
+            //check here if monster has been rolled in guild, and if so, put claimed on footer and who by- also prevent being able to claim it with reaction.(and remove react to claim message! (put the stuff in the .then() as an if))
 
 
             const monsterembed = new EmbedBuilder()
