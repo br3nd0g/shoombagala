@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder, ActivityType  } = require('discord.js');
+const { Client, Events, GatewayIntentBits, EmbedBuilder, AttachmentBuilder, ActivityType } = require('discord.js');
 const { rollMonster, getMonsterList } = require('./monsterdata')
 
 const client = new Client({ intents: [
@@ -8,12 +8,13 @@ const client = new Client({ intents: [
     GatewayIntentBits.GuildBans,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions
 ] });
 
 const commandPrefix = ";"
 
 function makeHelpString(){
-    const cmds = [["evil", "so evil man it is so evil"], ["monster", "rolls a raondom monster to claim"]]
+    const cmds = [["evil", "so evil man it is so evil"], ["monster", "rolls a random monster to claim"]]
 
     var helpS = "**BOT COMMANDS**\n\n*Prefix is ;*\n\n";
 
@@ -66,7 +67,15 @@ client.on('messageCreate', async (message) => {
             )
             .setImage(imageURL)
 
-            message.channel.send({ embeds: [monsterembed]});
+            message.channel.send({ embeds: [monsterembed]}).then((msg) =>{
+
+                const collector = msg.createReactionCollector({ time: 30000 });
+
+                collector.on('collect', (reaction, user) => {
+                    const editedEmbed = EmbedBuilder.from(monsterembed).setFooter({ text: `Claimed by ${user.tag}`, iconURL: user.displayAvatarURL() });
+                    msg.edit({ embeds: [editedEmbed] });
+                });
+            });
         }
         
         if(msgCon.startsWith("evil")){
@@ -83,7 +92,7 @@ client.on('messageCreate', async (message) => {
             .setTimestamp()
             .setFooter({ text: 'WHAT THE FUCK!', iconURL: 'https://toppng.com/uploads/preview/emoji-face-clipart-surprise-shocked-emotico-11563150618bithfjzj4q.png' });
 
-            message.channel.send({ embeds: [exampleEmbed] });
+            message.channel.send({ embeds: [exampleEmbed] })
         }
     }
 });

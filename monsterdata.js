@@ -39,7 +39,7 @@ async function getMonsterList(){
             }
         }
 	} catch (error) {
-		console.error("NOOOO\n" + error)
+		console.error("NOOOO " + error)
 	}
 
     mters = mters.filter(monster => monster != "");
@@ -49,7 +49,7 @@ async function getMonsterList(){
 
 async function getPhoto(monster, rarity) {
 	try {
-        console.log(`https://mysingingmonsters.fandom.com/wiki/${rarity}${monster}`)
+        //console.log(`https://mysingingmonsters.fandom.com/wiki/${rarity}${monster}`)
 		const response = await axios.get(
 			`https://mysingingmonsters.fandom.com/wiki/${rarity}${monster}`
 		)
@@ -63,7 +63,7 @@ async function getPhoto(monster, rarity) {
         return photoSrc
 
 	} catch (error) {
-		console.error("NOOOO\n" + error)
+		console.error("NOOOO " + error)
 	}
 }
 
@@ -75,6 +75,10 @@ async function rollMonster(mList){
     //var chosMonster = choose(["Maw", "Noggin", "Furcorn"])
 
     var photoUrl = await getPhoto(chosMonster, rar)
+    if (photoUrl == undefined){
+        rar = ""
+        photoUrl = await getPhoto(chosMonster, rar)
+    }
 
     if (rar.slice(-1) === "_"){rar = rar.substring(0,rar.length-1)}else{rar = "Common"}
 
