@@ -18,7 +18,7 @@ const client = new Client({ intents: [
 const commandPrefix = ";"
 
 function makeHelpString(){
-    const cmds = [["evil", "so evil man it is so evil"], ["monster", "rolls a random monster to claim"]]
+    const cmds = [["evil", "so evil man it is so evil"], ["monster", "rolls a random monster to claim"], ["island", "displays all claimed monsters in this server"]]
 
     var helpS = "**BOT COMMANDS**\n\n*Prefix is ;*\n\n";
 
