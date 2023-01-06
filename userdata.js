@@ -106,15 +106,36 @@ async function checkRolls(userID, guildID){
 async function resetClaimsAvailable(){
     let db = new sqlite3.Database('./userdata.db');
 
-    const sqlQuery = `UPDATE ClaimTimers SET rollsAvailable = 8, claimsAvailable = 1;`
+    const sqlQuery = `UPDATE ClaimTimers SET rollsAvailable = 9, claimsAvailable = 1;`
 
     await editDbPromise(db, sqlQuery)
 
     db.close()
 }
 
-function getUserClaims(userID, guildID){
-    //query all monsters by user in guild
+async function getUserClaims(userID, guildID){
+
+    function ownedMonster(name, rarity) {
+        this.name = name;
+        this.rarity = rarity;
+    }
+
+    let db = new sqlite3.Database('./userdata.db');
+
+    var owned = [];
+
+    const sqlQuery = `SELECT monsterName, Rarity FROM Claims WHERE userID = '${userID}' AND guildID = '${guildID}';`
+
+    const rows = await selectDbPromise(db, sqlQuery)
+
+    rows.forEach((row) => {
+        const monsterRecord = new ownedMonster(row.monsterName, row.Rarity)
+        owned.push(monsterRecord)
+    });
+
+    db.close()
+
+    return owned
 }
 
 async function checkCanClaim(userID, guildID){

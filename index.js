@@ -1,8 +1,8 @@
 require('dotenv').config();
-const { Client, Events, GatewayIntentBits, EmbedBuilder, AttachmentBuilder, ActivityType } = require('discord.js');
-const { send } = require('process');
-const { rollMonster, getMonsterList } = require('./monsterdata')
-const { checkIfClaimed, addClaim, getUserClaims, checkRolls, resetClaimsAvailable, checkCanClaim } = require('./userdata')
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, Events, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
+const { getMonsterList } = require('./monsterdata')
+const { checkRolls, resetClaimsAvailable } = require('./userdata')
+const { sendUserMonsters, sendMonster } = require('./discinteraction')
 fs = require('fs');
 
 
@@ -53,65 +53,21 @@ async function claimTimerCheck(){
     }
 }
 
+async function removeVolatileMonsters(monsters){
+    var indexToRmv = monsters.indexOf("Boo'qwurm");
+    monsters.splice(indexToRmv, 1);
+    indexToRmv = monsters.indexOf("Blow't");
+    monsters.splice(indexToRmv, 1);
+    indexToRmv = monsters.indexOf("G'day");
+    monsters.splice(indexToRmv, 1);
+}
+
 
 const helpString = makeHelpString()
 
 var monsterList;
 
-//make funcion for sending monster message rather than having it in listener
-
 //DISCORD CLIENT STUFF
-
-async function sendMonster(message){
-
-    const monsterDetails = await rollMonster(monsterList);
-
-    const name = monsterDetails.chosMonster;
-    var rarity = monsterDetails.rar;
-    const imageURL = monsterDetails.photoUrl;
-
-    //check here if monster has been rolled in guild, and if so, put claimed on footer and who by- also prevent being able to claim it with reaction.(and remove react to claim message! (put the stuff in the .then() as an if))
-    const claimCheck = await checkIfClaimed(name, rarity, message.guildId)
-
-    var monsterembed = new EmbedBuilder()
-    .setTitle(name)
-    .setColor(0x1c6b24)
-    .addFields(
-        { name: rarity, value: 'React to this message to claim!' }
-    )
-    .setImage(imageURL)
-
-    if(claimCheck.claimed == true){
-
-        var userWhoClaimed = message.guild.members.cache.find(user => user.id === claimCheck.userid);
-        monsterembed = EmbedBuilder.from(monsterembed).setFooter({ text: `Owned by ${userWhoClaimed.displayName}`, iconURL: userWhoClaimed.displayAvatarURL() });
-    }
-
-    message.channel.send({ embeds: [monsterembed]}).then((msg) =>{
-        if(claimCheck.claimed == false){
-
-            const collector = msg.createReactionCollector({ time: 30000 });
-
-            collector.on('collect', (reaction, user) => {
-                handleReaction(collector, user, msg, monsterembed, name, rarity)
-            });
-
-        }
-    });
-}
-
-async function handleReaction(collector, user, msg, embed, monName, monRarity){
-    const canUserClaim = await checkCanClaim(user.id, msg.guildId)
-    if(canUserClaim === true){
-        await addClaim(monName, monRarity, user.id, msg.guildId)
-        const editedEmbed = EmbedBuilder.from(embed).setFooter({ text: `Claimed by ${user.tag}`, iconURL: user.displayAvatarURL() });
-        msg.edit({ embeds: [editedEmbed] });
-        collector.stop()
-    }
-    else{
-        msg.channel.send(`**${user.username}**, you have used your current claim.`)
-    }
-}
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -122,29 +78,37 @@ client.on('ready', () => {
     });
 });
 
-client.on('messageCreate', async (message) => {
+client.on('clickButton', (button) => {
+    console.log(button)
+});
 
-    await claimTimerCheck()
+client.on('messageCreate', async (message) => {
 
     if(message.content.startsWith(commandPrefix)){
 
+        await claimTimerCheck()
+
         const msgCon = message.content.substring(commandPrefix.length)
 
-        if (msgCon.startsWith("help")){
+        if (msgCon.toLowerCase().startsWith("help")){
             message.channel.send(helpString);
         }
 
-        if(msgCon.startsWith("monster")){
+        if(msgCon.toLowerCase().startsWith("monster")){
 
 
             rolls = await checkRolls(message.author.id, message.guildId)
 
             if (rolls === 0){
                 message.channel.send("You have no rolls left.")
-            }else{sendMonster(message)}
+            }else{sendMonster(message, monsterList)}
+        }
+
+        if(msgCon.toLowerCase().startsWith("island")){
+            sendUserMonsters(message)
         }
         
-        if(msgCon.startsWith("evil")){
+        if(msgCon.toLowerCase().startsWith("evil")){
             const exampleEmbed = new EmbedBuilder()
             .setColor(0x990000)
             .setTitle('I am the evil villain...')
@@ -165,10 +129,7 @@ client.on('messageCreate', async (message) => {
 
 async function startBot(){
     monsterList = await getMonsterList()
-    const bookwormindex = monsterList.indexOf("Boo'qwurm");
-    monsterList.splice(bookwormindex, 1);
-    const blowtindex = monsterList.indexOf("Blow't");
-    monsterList.splice(blowtindex, 1);
+    await removeVolatileMonsters(monsterList)
     setTimeout(() => {
         //console.log(monsterList);
         client.login(process.env.clToken); }, 2000)

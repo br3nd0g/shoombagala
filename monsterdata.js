@@ -39,7 +39,7 @@ async function getMonsterList(){
             }
         }
 	} catch (error) {
-		console.error("NOOOO " + error)
+		//console.error("NOOOO " + error)
 	}
 
     mters = mters.filter(monster => monster != "");
@@ -64,6 +64,7 @@ async function getPhoto(monster, rarity) {
 
 	} catch (error) {
 		console.error("NOOOO " + error)
+        //console.log(`https://mysingingmonsters.fandom.com/wiki/${rarity}${monster}`)
 	}
 }
 
@@ -85,4 +86,4 @@ async function rollMonster(mList){
     return { rar, chosMonster, photoUrl }
 }
 
-module.exports = { rollMonster, getMonsterList }
+module.exports = { rollMonster, getMonsterList, getPhoto }
